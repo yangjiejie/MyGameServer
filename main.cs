@@ -9,6 +9,7 @@ namespace YJServer
         {
             GameServer server = new GameServer();
             server.init("127.0.0.1",9002);
+            Console.WriteLine("启动服务器");
             Console.ReadKey();
         }
     }

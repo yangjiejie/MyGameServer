@@ -48,7 +48,7 @@ namespace YJServer
 
         public static void AcceptCallback(IAsyncResult result)
         {
-            lock(lockobj)
+            lock (lockobj)
             {
                 var self = (GameServer)result.AsyncState;
                 if (self == null || self.m_socket == null)
@@ -74,7 +74,9 @@ namespace YJServer
                 {
                     //这里全部需要异步操作 不允许有同步的操作 
                     clientMap.Add(self.clientId++, connector);
-                    connector.Recv();
+                    connector.Recv(); 
+                    connector.Send(); // 实际服务器给客户端发消息 应该是通过某个按钮来触发
+                    //或者根据具体的事物来触发 
                 }
                 self.m_socket.BeginAccept(self.call, self);
             }
