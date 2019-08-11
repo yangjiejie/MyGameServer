@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.Net;
+using System.Net.Sockets;
 
 namespace YJServer
 {
@@ -8,7 +9,11 @@ namespace YJServer
         static void Main(string[] args)
         {
             GameServer server = new GameServer();
-            server.init("127.0.0.1",9002);
+
+            //自动获取本地ip地址 
+            
+            
+            server.init(9002);
             Console.WriteLine("启动服务器");
             Console.ReadKey();
         }

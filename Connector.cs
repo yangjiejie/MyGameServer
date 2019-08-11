@@ -10,6 +10,15 @@ namespace YJServer
     public class Connector
     {
         Socket m_socket; // 服务器和客户端 沟通的socket
+        
+        public Socket ConnectSocket
+        {
+            get
+            {
+                return m_socket;
+            }
+            
+        }
 
         Socket m_serverSocket; // 服务器socket
 
@@ -21,6 +30,7 @@ namespace YJServer
         //发送消息 
         public Connector(Socket so, Socket server)
         {
+           
             m_serverSocket = server;
             m_socket = so;
             m_receiveEventArgs = new SocketAsyncEventArgs();
@@ -32,6 +42,16 @@ namespace YJServer
 
             m_sendEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSend);
 
+        }
+        public void Close()
+        {
+           
+            //关闭定时器 线程 socket资源等等
+            m_receiveEventArgs = null;
+            m_sendEventArgs = null;
+            m_serverSocket = null;
+            m_socket.Close();
+            
         }
         public void Init(Socket so)
         {
@@ -47,30 +67,63 @@ namespace YJServer
         }
         public void Recv()
         {
-            byte[] buffer = new byte[400];
+            byte[] buffer = new byte[1000];
 
             m_receiveEventArgs.RemoteEndPoint = m_socket.RemoteEndPoint;
-            m_receiveEventArgs.SetBuffer(buffer, 0, 400);
+            m_receiveEventArgs.SetBuffer(buffer, 0, buffer.Length);
            
             m_socket.ReceiveAsync(m_receiveEventArgs);
 
         }
 
-        public void Send()
+        
+
+        public void SendHello(string str)
         {
-            var buffer2 = Encoding.Default.GetBytes("欢迎登陆小哥");
+            IOSocket io = new IOSocket();
+            SayHelloStruct say = new SayHelloStruct();
+            say.msgtype = NetMsgDefine.sayhello;
+            say.str = str;
+            io.WriteInt32(say.msgtype);
+            io.WriteString8(say.str);
             //var  buffer = new byte[1000];
             //Array.Copy(buffer2, buffer, buffer2.Length);
-            m_sendEventArgs.SetBuffer(buffer2, 0, buffer2.Length);
+            m_sendEventArgs.SetBuffer(io.GetBuffer(), 0, io.GetLength());
 
             m_socket.SendAsync(m_sendEventArgs);
         }
         public void OnRecv(object sender, SocketAsyncEventArgs e)
         {
-            int n = e.BytesTransferred;
+            IOSocket io = new IOSocket(e.Buffer);
+            io.Seek(0);
+            
+            int type = io.ReadInt32();
+            switch(type)
+            {
+                case NetMsgDefine.sayhello:
+                    {
+                        string str = io.ReadString16();
+                        Console.WriteLine(str);
+                    }
+                 
+                    break;
+                case NetMsgDefine.HeadBeat:
+                    {
+                        Console.WriteLine("心跳到这里来了吗？");
+                        string str = io.ReadByte().ToString();
+                        Console.WriteLine(str);
+                    }
+                   
+                    break;
+                case NetMsgDefine.GameLogic:
+                    break;
+                default:
+                    break;
+            }
+           
+          
 
-            string str = System.Text.Encoding.Default.GetString(e.Buffer);
-            Console.WriteLine(str);
+            
             this.Recv(); // 成功recv之后继续recv 我们测试客户
         }
 
